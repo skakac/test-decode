@@ -1,6 +1,7 @@
 const { PublicKey, clusterApiUrl, Connection } = require('@solana/web3.js')
-const { METADATA_PREFIX, decodeMetadata, decodeMasterEdition } = require('./nftMetadata')
+const { decodeMetadata, decodeMasterEdition } = require('./nftMetadata')
 
+const METADATA_PREFIX = 'metadata';
 const metadataProgramId = new PublicKey(
     'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
 )
@@ -27,9 +28,6 @@ async function test (nftPublicKey) {
     console.log('response', response);
 
     const dataBuffer = response.data;
-
-    console.log('buffer bs64', dataBuffer.toString('base64'))
-    console.log("buffer", atob(dataBuffer.toString('base64')))
 
     console.log('test', decodeMasterEdition(dataBuffer))
 

@@ -1,14 +1,5 @@
-const {
-    PublicKey,
-    SystemProgram,
-    SYSVAR_RENT_PUBKEY,
-    TransactionInstruction,
-} = require('@solana/web3.js');
-// import { programIds } from '../utils/ids';
 const { deserializeUnchecked, serialize } = require('borsh');
-
-// import BN from 'bn.js';
-// import { findProgramAddress } from '../utils';
+const { extendBorsh } = require('./borsh');
 
 const METADATA_PREFIX = 'metadata';
 const EDITION = 'edition';
@@ -24,17 +15,17 @@ const MAX_CREATOR_LIMIT = 5;
 
 const MAX_CREATOR_LEN = 32 + 1 + 1;
 const MAX_METADATA_LEN =
-    1 +
-    32 +
-    32 +
-    MAX_NAME_LENGTH +
-    MAX_SYMBOL_LENGTH +
-    MAX_URI_LENGTH +
-    MAX_CREATOR_LIMIT * MAX_CREATOR_LEN +
-    2 +
-    1 +
-    1 +
-    198;
+  1 +
+  32 +
+  32 +
+  MAX_NAME_LENGTH +
+  MAX_SYMBOL_LENGTH +
+  MAX_URI_LENGTH +
+  MAX_CREATOR_LIMIT * MAX_CREATOR_LEN +
+  2 +
+  1 +
+  1 +
+  198;
 
 const MAX_EDITION_LEN = 1 + 32 + 8 + 200;
 
@@ -64,7 +55,7 @@ class MasterEditionV1 {
         this.maxSupply = args.maxSupply;
         this.printingMint = args.printingMint;
         this.oneTimePrintingAuthorizationMint =
-            args.oneTimePrintingAuthorizationMint;
+          args.oneTimePrintingAuthorizationMint;
     }
 }
 
@@ -159,8 +150,8 @@ class UpdateMetadataArgs {
     constructor(args) {
         this.data = args.data ? args.data : null;
         this.updateAuthority = args.updateAuthority
-            ? new PublicKey(args.updateAuthority)
-            : null;
+          ? new PublicKey(args.updateAuthority)
+          : null;
         this.primarySaleHappened = args.primarySaleHappened;
     }
 }
@@ -312,19 +303,21 @@ const METADATA_SCHEMA = new Map([
 ]);
 
 const decodeMetadata = (buffer) => {
+    extendBorsh();
+
     const metadata = deserializeUnchecked(
-        METADATA_SCHEMA,
-        Metadata,
-        buffer,
+      METADATA_SCHEMA,
+      Metadata,
+      buffer,
     );
     return metadata;
 };
 
 const decodeEditionMarker = (buffer) => {
     const editionMarker = deserializeUnchecked(
-        METADATA_SCHEMA,
-        EditionMarker,
-        buffer,
+      METADATA_SCHEMA,
+      EditionMarker,
+      buffer,
     );
     return editionMarker;
 };
@@ -336,15 +329,15 @@ const decodeEdition = (buffer) => {
 const decodeMasterEdition = (buffer) => {
     if (buffer[0] == MetadataKey.MasterEditionV1) {
         return deserializeUnchecked(
-            METADATA_SCHEMA,
-            MasterEditionV1,
-            buffer,
+          METADATA_SCHEMA,
+          MasterEditionV1,
+          buffer,
         );
     } else {
         return deserializeUnchecked(
-            METADATA_SCHEMA,
-            MasterEditionV2,
-            buffer,
+          METADATA_SCHEMA,
+          MasterEditionV2,
+          buffer,
         );
     }
 };
@@ -352,16 +345,16 @@ const decodeMasterEdition = (buffer) => {
 
 async function updateMetadata(data, newUpdateAuthority, primarySaleHappened, updateAuthority, metadataAccount) {
     const metadataProgramId = new PublicKey(
-        'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
     );
 
     const value = new UpdateMetadataArgs({
         data,
         updateAuthority: !newUpdateAuthority ? undefined : newUpdateAuthority,
         primarySaleHappened:
-            primarySaleHappened === null || primarySaleHappened === undefined
-                ? null
-                : primarySaleHappened,
+          primarySaleHappened === null || primarySaleHappened === undefined
+            ? null
+            : primarySaleHappened,
     });
 
     const txnData = Buffer.from(serialize(METADATA_SCHEMA, value));
@@ -388,6 +381,4 @@ async function updateMetadata(data, newUpdateAuthority, primarySaleHappened, upd
     return { instruction };
 }
 
-module.exports = {
-    decodeMetadata, decodeMasterEdition, decodeEdition, decodeEditionMarker, METADATA_PREFIX
-}
+module.exports = { decodeMetadata, decodeEditionMarker, decodeEdition, decodeMasterEdition }
